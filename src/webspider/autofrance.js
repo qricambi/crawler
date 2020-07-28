@@ -39,29 +39,34 @@ async function Login(user, password) {
 
     biscuit = first_call.headers['set-cookie']
     const second_call = await axios({
-        method: "post",
-        url: "https://sklep.auto-france.com.pl/api/stock-login-form-field",
+        url: 'https://sklep.auto-france.com.pl/api/stock-login-form-field',
+        data: querystring.stringify(data),
+        method: 'POST',
         headers: {
             "Host": "sklep.auto-france.com.pl",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:72.0) Gecko/20100101 Firefox/72.0",
             "Accept": "*/*",
             "Accept-Language": "it-IT,it;q=0.8,en-US;q=0.5,en;q=0.3",
             "Accept-Encoding": "gzip, deflate, br",
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             "X-Requested-With": "XMLHttpRequest",
-            "Content-Length": "243",
             "Origin": "https://sklep.auto-france.com.pl",
             "Connection": "keep-alive",
-            "Referer" : "https://sklep.auto-france.com.pl/zaloguj-sie?returnUrl=%2F&hw-lang=it-IT",
-            "Cookie" : biscuit,
-            "Pragma" : "no-cache",
-            "Cache-Control" : "no-cache",
+            "Referer": "https://sklep.auto-france.com.pl/zaloguj-sie?returnUrl=%2F&hw-lang=it-IT",
+            "Cookie": biscuit,
+            "Pragma": "no-cache",
+            "Cache-Control": "no-cache",
             "TE": "Trailers"
 
         },
-        data: querystring.stringify(data)
+        maxRedirects: 0,
+        validateStatus: function (status) {
+            return true
+        }
 
     })
+
+
     console.log('bella lì')
 }
 

@@ -6,7 +6,7 @@ const querystring = require("querystring")
 const dto = require("../lib/dto")
 const moduleName = require("../lib/sys").ModuleName(__filename)
 const a_status = require("../lib/avalability_status")
-const START_URL = ""
+const START_URL = "https://sklep.auto-france.com.pl/zaloguj-sie?returnUrl=%2F&hw-lang=it-IT"
 
 
 async function Login(user, password) {
@@ -53,18 +53,16 @@ async function Login(user, password) {
             "Origin": "https://sklep.auto-france.com.pl",
             "Connection": "keep-alive",
             "Referer" : "https://sklep.auto-france.com.pl/zaloguj-sie?returnUrl=%2F&hw-lang=it-IT",
-            "Cookie" : biscuit, 
+            "Cookie" : biscuit,
             "Pragma" : "no-cache",
             "Cache-Control" : "no-cache",
             "TE": "Trailers"
 
         },
         data: querystring.stringify(data)
-        
+
     })
     console.log('bella lì')
-
-
 }
 
 async function Search(user, password, skus) {

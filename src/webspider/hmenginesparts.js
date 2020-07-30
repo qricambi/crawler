@@ -133,32 +133,49 @@ async function Search(user, password, skus) {
       },
     })
     let $ = cheerio.load(third_call.data);
-    let container = $(".c-products").children('.c-panel').get()
+    let container = $(".site-content").find('.search-entry-inner').get()
 
 
     for (const row of container) {
 
+      let detailscall=await axios({
+        url:$(row).find('.search-entry-title').children().attr('href'),
+        method:'get',
+        headers:{
+          'Host': 'hmenginesparts.nl',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101 Firefox/78.0',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'it-IT,it;q=0.8,en-US;q=0.5,en;q=0.3',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Connection': 'keep-alive',
+          'Cookie':biscuit,
+          'Upgrade-Insecure-Requests': '1',
+          'Pragma': 'no-cache',
+          'Cache-Control': 'no-cache'
 
+        }
+      })
+      let $2=cheerio.load(detailscall.data)
       result.push(dto.webspider_data_result(
         moduleName,
         0,
         0,
         skus[index],
-        $(row).find(".c-product__display-producer").text().trim(), //produttore
+        '', //produttore
         "",
-        $(row).find(".c-product__display-code").children().text().trim(), //codice
+        $2('.sku').text().trim(), //codice
         "",
         "",
-        $(row).find(".c-product__title").children().text().trim(), //descrizione
+        $2(".page-header-title.clr").text().trim(), //descrizione
         "",
         "",
         "",
         null,
-        $(row).find(".c-headline--xl").text().trim().replace(/[^0-9,.]+/g, ""), //prezzo
+        $2('.summary.entry-summary').find(".woocommerce-Price-amount.amount").first().text().trim().replace(/[^0-9,.]+/g, ""), //prezzo
         null,
         null,
-        status($(row).find(".c-product-stock__availability").text()), //disponibilità
-        $(row).find(".c-product__title").children().attr('href') //link
+        status($2(".stock.in-stock").text()), //disponibilità
+        'https://hmenginesparts.nl'+detailscall.request.path//link
 
       ))
       console.log('3')
@@ -169,50 +186,27 @@ async function Search(user, password, skus) {
 }
 
 function status(param) {
-  param = param.replace(/[^0-9,.>]+/g, '')
-  let reg = '(^[0-9,.]+)'
-  if (param.includes('>')) {
-    param = param.replace('/\s/', '')
-
-    param = param.replace('>', ' ')
-
-    param = parseInt(param);
-    if (param == 5) {
-
-      return {
-        code: a_status.available,
-        desc: ">" + param + ""
-      }
-    } else {
-
-      return {
-        code: a_status.other,
-        desc: param + ""
-      }
-    }
-  } else if (param.match(reg)) {
-    param = parseInt(param);
-    if (param >= 5) {
-
-      return {
-        code: a_status.available,
-        desc: param + ""
-      }
-    } else if (param != 0) {
-
-      return {
-        code: a_status.other,
-        desc: param + ""
-      }
-    } else {
+  param = param.replace(/[^0-9,.]+/g, '')
+  param = parseInt(param)
+  if (param==0||param=='') {
 
       return {
         code: a_status.not_available,
-        desc: +param + ""
+        desc: "not available " + param + ""
+      }
+    } else if(param>=5) {
+
+    return {
+        code: a_status.available,
+        desc: "available " + param + ""
       }
     }
-  }
-  console.log('ciao')
+    else{
+      return {
+        code: a_status.other,
+        desc: "few left " + param + ""
+      }
+    }
 
 }
 module.exports.login = Login

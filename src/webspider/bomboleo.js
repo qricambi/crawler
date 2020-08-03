@@ -53,24 +53,23 @@ async function Login(user, password) {
             "Origin": "http://shop.bomboleo.com",
             "Connection": "keep-alive",
             "Referer": "http://shop.bomboleo.com/",
-            "Cookie" : biscuit,
+            "Cookie": biscuit,
             "Upgrade-Insecure-Requests": "1",
             "Pragma": "no-cache",
             "Cache-Control": "no-cache"
         },
         maxRedirects: 0,
         validateStatus: function (status) {
-          return (status >= 200 && status <= 303)
+            return (status >= 200 && status <= 303)
         }
 
     })
     if (second_call.headers['location'].includes("id=1")) {
-        biscuit=biscuit.concat(second_call.headers['set-cookie'])
+        biscuit = biscuit.concat(second_call.headers['set-cookie'])
         console.log("login OK");
         return dto.check_login_result(moduleName, true)
     }
-    else 
-    {
+    else {
         console.log("login KO");
         return dto.check_login_result(moduleName, false)
     }
@@ -107,57 +106,55 @@ async function Search(user, password, skus) {
             }
         })
         let $ = cheerio.load(third_call.data)
-            let rows = $(".tblReferencias").get()
-            rows  = rows.filter(x=>!$(x).attr('style').includes('none'))
-            for (const row of rows) {
-                result.push(dto.webspider_data_result(
-                    moduleName,
-                    0,
-                    0,
-                    skus[index],
-                    "",//produttore
-                    "",
-                    $(row).find('').children("b").text(),//codice
-                    "",
-                    "",
-                    $(row).find('div').text(),//descrizione
-                    "",
-                    "",
-                    "",
-                    null,
-                    $(row).find('.desc').children().children().children().text().trim().match(/(^[0-9,.]+)/gim)[0],//prezzo
-                    null,
-                    null,
-                    status($(row).find('[class*="stock"]')), //status(), //disponibilità
-                    $(row).find('td').attr("href"), //link
+        let rows = $("tr.prod_pesquisa").get()
+        // rows  = rows.filter(x=>!$(x).attr('style').includes('none'))
+        for (const row of rows) {
+            let price = $(row).find("table.priceTable").find(".h1List").clone().children().remove().end().text().trim().match(/([0-9,.]+)/gim)
+            result.push(dto.webspider_data_result(
+                moduleName,
+                0,
+                0,
+                skus[index],
+                $(row).children('td').find("span.logoMarca").children("img").attr("title"),//produttore
+                "",
+                $(row).children('td').eq(0).find("b:contains('REF')").text().replace('REF.',''),//codice
+                "",
+                "",
+                $(row).children('td').eq(0).find("b:contains('REF')").parent().clone().children().remove().end().text(),//descrizione
+                "",
+                "",
+                "",
+                null,
+                price ? price[0] : "",//prezzo
+                null,
+                null,
+                status($(row).find('p[class*="stock"]').get(), $), //status(), //disponibilità
+                "http://shop.bomboleo.com/" + $(row).find("img.img_prod").parent().attr("href"), //link
 
-                ))
-            }
-            //0 no disp rosso
-            //>5 verde
-            //0-5 giallo
-
-
-
-
+            ))
+        }
     }
-    
+    return result
 }
 
 
-function status(st)
-{   //let regex=(/(^[0-9,.]+)/gim)
-    {
-        st = st.replace('\n','')
-        st = st.replace('>','').trim()
-        return{
-            code: a_status.available,
-            desc: st + ""
-        }
-
+function status(st, $) {
+    let text="";
+    let count=0;
+    for (const element of st) {
+        text += $(element).text() + ': ' + ($(element).attr('class').includes('stockIndisponivel') ? 'Non disponibile ' : 'Disponibile ')
+        if ($(element).attr('class').includes('stockDisponivel')) count++
     }
-    
-
+    if (count > 0)
+        return {
+            code: a_status.available,
+            desc: text
+        }
+    else
+        return {
+            code: a_status.not_available,
+            desc: text
+        }
 }
 
 module.exports.login = Login
